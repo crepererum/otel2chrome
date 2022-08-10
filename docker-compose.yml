@@ -1,0 +1,21 @@
+---
+version: "3"
+
+services:
+  otel-collector:
+    image: otlp-flamegraph
+    command:
+      - "--config=/etc/otel-collector-config.yaml"
+    ports:
+      - target: 6831
+        published: 6831
+        host_ip: 127.0.0.1
+        protocol: udp
+    volumes:
+      - type: bind
+        source: ./otel-collector-config.yml
+        target: /etc/otel-collector-config.yaml
+        read_only: true
+      # - type: bind
+      #   source: ./data/otel.json
+      #   target: /data/otel.json

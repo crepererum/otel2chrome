@@ -1,0 +1,17 @@
+---
+receivers:
+  jaeger:
+    protocols:
+      thrift_compact:
+
+exporters:
+  file:
+    path: /data/otel.json
+
+service:
+  pipelines:
+    traces:
+      receivers:
+        - jaeger
+      exporters:
+        - file
