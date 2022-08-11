@@ -180,7 +180,7 @@ def main():
         f.seek(0)
 
         time_ranges = expand_time_ranges(time_ranges, children)
-        min_start = min(t[0] for t in time_ranges.values())
+        min_start = min(t[0] for t in time_ranges.values()) if time_ranges else 0
 
         id_counter = 1
 
