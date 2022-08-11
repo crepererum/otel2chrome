@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import json
 import sys
 
+
 @dataclass
 class Event:
     ts: int
@@ -33,17 +34,20 @@ class Span:
             parent_id=span["parentSpanId"],
             start_time=int(span["startTimeUnixNano"]),
             end_time=int(span["endTimeUnixNano"]),
-            events=[
-                Event.from_json(event)
-                for event in span["events"]
-            ] if "events" in span else [],
+            events=(
+                [Event.from_json(event) for event in span["events"]]
+                if "events" in span
+                else []
+            ),
         )
+
 
 @dataclass
 class Frame:
     i: int
     name: str
     parent: str
+
 
 class FrameBuilder:
     def __init__(self):
@@ -195,44 +199,50 @@ def main():
                 span_id = id_counter
                 id_counter += 1
 
-                events.append({
-                    "name": span_name,
-                    "ph": "B",
-                    "ts": ns_to_us(start_time - min_start),
-                    "pid": 1,  # for Chrome
-                    "cat": category,  # for color
-                    "sf": frame_id,
-                    "id": span_id,
-                    "_level": level,
-                })
+                events.append(
+                    {
+                        "name": span_name,
+                        "ph": "B",
+                        "ts": ns_to_us(start_time - min_start),
+                        "pid": 1,  # for Chrome
+                        "cat": category,  # for color
+                        "sf": frame_id,
+                        "id": span_id,
+                        "_level": level,
+                    }
+                )
                 for event in span.events:
                     event_id = id_counter
                     id_counter += 1
 
                     event_name = f"{event.name} ({span.span_id})"
 
-                    events.append({
-                        "name": event_name,
-                        "ph": "i",
-                        "ts": ns_to_us(event.ts - min_start),
+                    events.append(
+                        {
+                            "name": event_name,
+                            "ph": "i",
+                            "ts": ns_to_us(event.ts - min_start),
+                            "pid": 1,  # for Chrome
+                            "cat": category,  # for color
+                            "sf": frame_id,
+                            "id": event_id,
+                            "s": "t",
+                            "_level": level,
+                        }
+                    )
+
+                events.append(
+                    {
+                        "name": span_name,
+                        "ph": "E",
+                        "ts": ns_to_us(end_time - min_start),
                         "pid": 1,  # for Chrome
                         "cat": category,  # for color
                         "sf": frame_id,
-                        "id": event_id,
-                        "s": "t",
+                        "id": span_id,
                         "_level": level,
-                    })
-
-                events.append({
-                    "name": span_name,
-                    "ph": "E",
-                    "ts": ns_to_us(end_time - min_start),
-                    "pid": 1,  # for Chrome
-                    "cat": category,  # for color
-                    "sf": frame_id,
-                    "id": span_id,
-                    "_level": level,
-                })
+                    }
+                )
 
     events = sorted(
         events,
@@ -250,6 +260,7 @@ def main():
         "stackFrames": frame_builder.to_dict(),
     }
     print(json.dumps(out))
+
 
 if __name__ == "__main__":
     main()
